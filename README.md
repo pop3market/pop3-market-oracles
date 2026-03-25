@@ -53,6 +53,7 @@ UmaOracleAdapter ──▶ LzCrossChainSender ═══════════�
 | [Chainlink Oracle](docs/00_chainlink-oracle.md) | Price market settlement — question types, usage flow, resolution, security |
 | [UMA Oracle](docs/01_uma-oracle.md) | Subjective markets via UMA OOv3 — bonds, disputes, usage flow, security |
 | [Bridge & Infrastructure](docs/02_bridge-and-infrastructure.md) | LayerZero bridge, BridgeReceiver, deployment guide, key addresses, comparison |
+| [Events](docs/02_events.md) | Complete event reference for all contracts — indexer guidelines, lifecycle flows, shared patterns |
 
 ## File Structure
 
