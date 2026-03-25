@@ -1,4 +1,4 @@
-# Pop3 Oracle Bridge
+# Pop3 Market Oracles
 
 Oracle infrastructure for [Pop3 Market](https://pop3market.com). Two oracle systems:
 
