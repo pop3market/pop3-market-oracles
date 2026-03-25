@@ -555,69 +555,133 @@ event CrossChainRelayUpdated(address indexed previousRelay, address indexed newR
 ### UMA Oracle Flow (Polygon → Unichain)
 
 ```
-Polygon                                         Unichain
-───────                                         ────────
-1. QuestionInitialized (UmaOracleAdapter)
-   ↓
-   [liveness period]
-   ↓
-2a. QuestionDisputed (if disputed → UMA DVM → wait for DVM verdict)
-   OR
-2b. (no dispute — liveness expires)
-   ↓
-3. settleQuestion() triggers callback within same tx:
-   3a. QuestionResolved (callback from UMA — emitted first by log index)
-   3b. QuestionSettled  (emitted after callback returns)
-   ↓
-4. QuestionRelayed (UmaOracleAdapter)
-   ↓
-5. AnswerSent (LzCrossChainSender)
-   ↓ ─── LayerZero V2 ───
-6. AnswerReceived (LzCrossChainReceiver)
-   ↓
-7a. AnswerRelayed (BridgeReceiver)
-   OR
-7b. RelayFailed → RelayRecovered (retry)
+╔═══════════════════════════════════════════════════════════════╗
+║  POLYGON                                                      ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 1. QuestionInitialized (UmaOracleAdapter)               │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               ▼                               ║
+║                    [liveness period — 2h default]             ║
+║                               │                               ║
+║              ┌────────────────┴────────────────┐              ║
+║              ▼                                 ▼              ║
+║  ┌───────────────────────────┐   ┌──────────────────────────┐ ║
+║  │ 2a. QuestionDisputed      │   │ 2b. No dispute           │ ║
+║  │     → UMA DVM vote        │   │     → liveness expires   │ ║
+║  │     → verdict callback    │   │                          │ ║
+║  └─────────────┬─────────────┘   └────────────┬─────────────┘ ║
+║                └────────────────┬──────────────┘              ║
+║                                 ▼                             ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 3. settleQuestion() triggers callback:                  │  ║
+║  │    • QuestionResolved  (callback from UMA)              │  ║
+║  │    • QuestionSettled   (emitted after callback)         │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               ▼                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 4. QuestionRelayed (UmaOracleAdapter)                   │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               ▼                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 5. AnswerSent (LzCrossChainSender)                      │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               │                               ║
+╚═══════════════════════════════╪═══════════════════════════════╝
+                                │
+                       ═══ LayerZero V2 ═══
+                                │
+╔═══════════════════════════════╪═══════════════════════════════╗
+║  UNICHAIN                     │                               ║
+╠═══════════════════════════════╪═══════════════════════════════╣
+║                               ▼                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 6. AnswerReceived (LzCrossChainReceiver)                │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               │                               ║
+║              ┌────────────────┴────────────────┐              ║
+║              ▼                                 ▼              ║
+║  ┌───────────────────────────┐   ┌──────────────────────────┐ ║
+║  │ 7a. AnswerRelayed         │   │ 7b. RelayFailed          │ ║
+║  │     (BridgeReceiver)      │   │     → RelayRecovered     │ ║
+║  └───────────────────────────┘   └──────────────────────────┘ ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ### Chainlink Price Flow (Unichain only)
 
 ```
-Unichain
-────────
-1. PriceQuestionCreated (ChainlinkPriceResolver)
-   ↓
-   [wait for endTime + Chainlink round data]
-   ↓
-2. PriceQuestionResolved (ChainlinkPriceResolver)
-   ↓
-   [Diamond's reportOutcome() called directly — no bridge needed]
+╔═══════════════════════════════════════════════════════════════╗
+║  UNICHAIN                                                     ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 1. PriceQuestionCreated (ChainlinkPriceResolver)        │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               ▼                               ║
+║                [wait for endTime + Chainlink round data]      ║
+║                               │                               ║
+║                               ▼                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 2. PriceQuestionResolved (ChainlinkPriceResolver)       │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               ▼                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ Diamond.reportOutcome() — called directly, no bridge    │  ║
+║  └─────────────────────────────────────────────────────────┘  ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ### Question Cancellation Flow
 
 ```
-Any adapter:
-1. QuestionCancelled (adapter)
-   ↓
-   [if UMA and assertion still live:]
-   2a. CancelledAssertionSettled (callback arrives post-cancel)
-   2b. CancelledAssertionDisputed (dispute arrives post-cancel)
+╔═══════════════════════════════════════════════════════════════╗
+║  POLYGON (any adapter)                                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 1. QuestionCancelled (adapter)                          │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               │                               ║
+║              [if UMA and assertion still live:]               ║
+║                               │                               ║
+║              ┌────────────────┴────────────────┐              ║
+║              ▼                                 ▼              ║
+║  ┌───────────────────────────┐   ┌──────────────────────────┐ ║
+║  │ 2a. CancelledAssertion    │   │ 2b. CancelledAssertion   │ ║
+║  │     Settled               │   │     Disputed             │ ║
+║  │     (callback post-cancel)│   │     (dispute post-cancel)│ ║
+║  └───────────────────────────┘   └──────────────────────────┘ ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ### Failed Relay Recovery Flow
 
 ```
-Unichain:
-1. RelayFailed (LzCrossChainReceiver)
-   ↓
-   [next lzReceive auto-heals OR manual retry]
-   ↓
-2a. RelayRecovered (manual=false, auto-heal in next lzReceive)
-   OR
-2b. RelayRecovered (manual=true, via retryFailedRelay())
-   OR
-2c. FailedRelayRemoved (admin cleanup, no retry)
+╔═══════════════════════════════════════════════════════════════╗
+║  UNICHAIN                                                     ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  ┌─────────────────────────────────────────────────────────┐  ║
+║  │ 1. RelayFailed (LzCrossChainReceiver)                   │  ║
+║  └────────────────────────────┬────────────────────────────┘  ║
+║                               │                               ║
+║          [next lzReceive auto-heals OR manual retry]          ║
+║                               │                               ║
+║         ┌─────────────────────┼─────────────────────┐         ║
+║         ▼                     ▼                     ▼         ║
+║  ┌─────────────────┐  ┌─────────────────┐  ┌───────────────┐  ║
+║  │ 2a. Relay       │  │ 2b. Relay       │  │ 2c. FailedRe- │  ║
+║  │     Recovered   │  │     Recovered   │  │     layRemoved│  ║
+║  │  (auto-heal in  │  │  (manual, via   │  │  (admin clean │  ║
+║  │   next lzRecv)  │  │  retryFailed()) │  │   up, no retry│  ║
+║  └─────────────────┘  └─────────────────┘  └───────────────┘  ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ---
