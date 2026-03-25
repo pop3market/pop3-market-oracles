@@ -1,0 +1,20 @@
+# Compiler files
+forge-cache/
+out/
+hardhat-cache/
+hardhat-artifacts/
+
+# Dependencies
+node_modules/
+
+# Ignores development broadcast logs
+broadcast/
+
+# Dotenv files
+.env
+.env.production
+.env.testnet
+
+# OS
+.DS_Store
+/coverage

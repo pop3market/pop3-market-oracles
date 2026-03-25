@@ -1,0 +1,19 @@
+Copyright (c) 2026 Pop3 Market (pop3market.com). All rights reserved.
+
+This software is proprietary and confidential. No license, right, or
+permission is granted to any person or entity to use, copy, modify,
+merge, distribute, sublicense, deploy, or create derivative works of
+this software, in whole or in part, for any purpose, without the prior
+written consent of the Licensor.
+
+Viewing or accessing the source code does not grant any usage rights.
+
+PERMITTED USES:
+- Security auditing, vulnerability research, and code review of this
+  software is permitted for the purpose of evaluating or improving the
+  security of the Licensed Work, provided that any findings are reported
+  to the Licensor prior to public disclosure.
+
+EXCEPTIONS (MIT License):
+- test/ — All test files
+- src/interfaces/ — All interface files
