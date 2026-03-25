@@ -1,6 +1,6 @@
 # 03 — Events Infrastructure
 
-> Complete event reference for the Pop3 Market Oracle suite (`pop3-market-oracles-dev`).
+> Complete event reference for the Pop3 Market Oracle suite.
 > Use this spec to build indexers, subgraphs, and analytics pipelines.
 
 ---
