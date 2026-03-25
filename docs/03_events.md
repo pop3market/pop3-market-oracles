@@ -572,8 +572,8 @@ event CrossChainRelayUpdated(address indexed previousRelay, address indexed newR
 ║  │     → UMA DVM vote        │   │     → liveness expires   │ ║
 ║  │     → verdict callback    │   │                          │ ║
 ║  └─────────────┬─────────────┘   └────────────┬─────────────┘ ║
-║                └────────────────┬─────────────┘               ║
-║                                 ▼                             ║
+║                └──────────────┬───────────────┘               ║
+║                               ▼                               ║
 ║  ┌─────────────────────────────────────────────────────────┐  ║
 ║  │ 3. settleQuestion() triggers callback:                  │  ║
 ║  │    • QuestionResolved  (callback from UMA)              │  ║
